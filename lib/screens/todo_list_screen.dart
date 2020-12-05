@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:notekeeper/screens/add_task_screen.dart';
 
 class TodoListScreen extends StatefulWidget {
   @override
@@ -7,30 +8,23 @@ class TodoListScreen extends StatefulWidget {
 }
 
 class _TodoListScreenState extends State<TodoListScreen> {
-
   Widget _buildTask(int index) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 25.0),
-      child: Column(
-        children: <Widget>[
-          ListTile(
-            title: Text('Task Title'),
-            subtitle: Text('Oct 2, 2019 - High'),
-            trailing: Checkbox(
-              onChanged: (value){
-
-              },
-              activeColor: Theme.of(context).primaryColor,
-              value: true,
+        padding: EdgeInsets.symmetric(horizontal: 25.0),
+        child: Column(
+          children: <Widget>[
+            ListTile(
+              title: Text('Task Title'),
+              subtitle: Text('Oct 2, 2019 - High'),
+              trailing: Checkbox(
+                onChanged: (value) {},
+                activeColor: Theme.of(context).primaryColor,
+                value: true,
+              ),
             ),
-
-          ),
-          Divider(
-
-          )
-        ],
-      )
-    );
+            Divider()
+          ],
+        ));
   }
 
   @override
@@ -39,8 +33,12 @@ class _TodoListScreenState extends State<TodoListScreen> {
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).primaryColor,
-        child: Icon(Icons.add, color: Colors.white,),
-        onPressed: () => print("Floating Action button pressed"),
+        child: Icon(
+          Icons.add,
+          color: Colors.white,
+        ),
+        onPressed: () => Navigator.push(
+            context, MaterialPageRoute(builder: (_) => AddTaskScreen())),
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.dark.copyWith(
@@ -59,7 +57,7 @@ class _TodoListScreenState extends State<TodoListScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
                           Text(
-                            'My Task',
+                            'My Tasks',
                             style: TextStyle(
                               color: Colors.black,
                               fontSize: 40.0,
