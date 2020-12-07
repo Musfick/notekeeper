@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(
           primaryColor: Colors.red,
           //this is what you want
-          accentColor: Colors.white,
+          accentColor: Colors.red,
           primarySwatch: Colors.red
         ),
         home: TodoListScreen());

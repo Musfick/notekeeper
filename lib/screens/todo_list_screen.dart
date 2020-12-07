@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:notekeeper/helpers/datebase_helper.dart';
 import 'package:notekeeper/screens/add_task_screen.dart';
+import 'package:notekeeper/models/task_model.dart';
 
 class TodoListScreen extends StatefulWidget {
   @override
@@ -8,6 +10,20 @@ class TodoListScreen extends StatefulWidget {
 }
 
 class _TodoListScreenState extends State<TodoListScreen> {
+  Future<List<Task>> _taskList;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateTaskList();
+  }
+
+  _updateTaskList() {
+    setState(() {
+      _taskList = DatabaseHelper.instance.getTaskList();
+    });
+  }
+
   Widget _buildTask(int index) {
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 25.0),
@@ -41,45 +57,53 @@ class _TodoListScreenState extends State<TodoListScreen> {
             context, MaterialPageRoute(builder: (_) => AddTaskScreen())),
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: SystemUiOverlayStyle.dark.copyWith(
-            statusBarColor: Colors.white,
-            systemNavigationBarColor: Colors.white,
-            systemNavigationBarIconBrightness: Brightness.dark),
-        child: ListView.builder(
-            padding: EdgeInsets.symmetric(vertical: 80.0),
-            itemCount: 20,
-            itemBuilder: (BuildContext context, int index) {
-              if (index == 0) {
-                return Padding(
-                    padding:
-                        EdgeInsets.symmetric(vertical: 20.0, horizontal: 40.0),
-                    child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'My Tasks',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 40.0,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          SizedBox(
-                            height: 10.0,
-                          ),
-                          Text(
-                            '1 of 10',
-                            style: TextStyle(
-                              color: Colors.grey,
-                              fontSize: 20.0,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                        ]));
-              }
-              return _buildTask(index);
-            }),
-      ),
+          value: SystemUiOverlayStyle.dark.copyWith(
+              statusBarColor: Colors.white,
+              systemNavigationBarColor: Colors.white,
+              systemNavigationBarIconBrightness: Brightness.dark),
+          child: FutureBuilder(
+              future: _taskList,
+              builder: (context, snapshot) {
+                if (snapshot.hasData) {
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
+                }
+                return ListView.builder(
+                    padding: EdgeInsets.symmetric(vertical: 80.0),
+                    itemCount: 1 + snapshot.data.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      if (index == 0) {
+                        return Padding(
+                            padding: EdgeInsets.symmetric(
+                                vertical: 20.0, horizontal: 40.0),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: <Widget>[
+                                  Text(
+                                    'My Tasks',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontSize: 40.0,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    height: 10.0,
+                                  ),
+                                  Text(
+                                    '1 of 10',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  )
+                                ]));
+                      }
+                      return _buildTask(snapshot.data(index - 1));
+                    });
+              })),
     );
   }
 }
