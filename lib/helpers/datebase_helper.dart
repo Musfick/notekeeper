@@ -48,7 +48,10 @@ class DatabaseHelper {
   Future<List<Task>> getTaskList() async {
     final List<Map<String, dynamic>> taskMapList = await getTaskMapList();
     final List<Task> taskList = [];
-    taskMapList.forEach((taskMap) => {taskList.add(Task.fromMap(taskMap))});
+    taskMapList.forEach((taskMap) {
+      taskList.add(Task.fromMap(taskMap));
+    });
+    //taskList.sort((taskA, taskB) => taskA.date.compareTo(taskB.date));
     return taskList;
   }
 

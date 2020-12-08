@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:notekeeper/helpers/datebase_helper.dart';
 import 'package:notekeeper/screens/add_task_screen.dart';
 import 'package:notekeeper/models/task_model.dart';
@@ -11,6 +12,7 @@ class TodoListScreen extends StatefulWidget {
 
 class _TodoListScreenState extends State<TodoListScreen> {
   Future<List<Task>> _taskList;
+  final DateFormat _dateFormatter = DateFormat('MMM dd, yyyy');
 
   @override
   void initState() {
@@ -24,19 +26,43 @@ class _TodoListScreenState extends State<TodoListScreen> {
     });
   }
 
-  Widget _buildTask(int index) {
+  Widget _buildTask(Task task) {
     return Padding(
         padding: EdgeInsets.symmetric(horizontal: 25.0),
         child: Column(
           children: <Widget>[
             ListTile(
-              title: Text('Task Title'),
-              subtitle: Text('Oct 2, 2019 - High'),
-              trailing: Checkbox(
-                onChanged: (value) {},
-                activeColor: Theme.of(context).primaryColor,
-                value: true,
+              title: Text(
+                task.title,
+                style: TextStyle(
+                    fontSize: 16.0,
+                    decoration: task.status == 0
+                        ? TextDecoration.none
+                        : TextDecoration.lineThrough),
               ),
+              subtitle: Text(
+                '${_dateFormatter.format(task.date)} - ${task.priority}',
+                style: TextStyle(
+                    decoration: task.status == 0
+                        ? TextDecoration.none
+                        : TextDecoration.lineThrough),
+              ),
+              trailing: Checkbox(
+                onChanged: (value) {
+                  task.status = value ? 1 : 0;
+                  DatabaseHelper.instance.updateTask(task);
+                  _updateTaskList();
+                },
+                activeColor: Theme.of(context).primaryColor,
+                value: task.status == 1 ? true : false,
+              ),
+              onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) => AddTaskScreen(
+                            updateTaskList: _updateTaskList,
+                            task: task,
+                          ))),
             ),
             Divider()
           ],
@@ -54,7 +80,11 @@ class _TodoListScreenState extends State<TodoListScreen> {
           color: Colors.white,
         ),
         onPressed: () => Navigator.push(
-            context, MaterialPageRoute(builder: (_) => AddTaskScreen())),
+            context,
+            MaterialPageRoute(
+                builder: (_) => AddTaskScreen(
+                      updateTaskList: _updateTaskList,
+                    ))),
       ),
       body: AnnotatedRegion<SystemUiOverlayStyle>(
           value: SystemUiOverlayStyle.dark.copyWith(
@@ -64,11 +94,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
           child: FutureBuilder(
               future: _taskList,
               builder: (context, snapshot) {
-                if (snapshot.hasData) {
+                if (!snapshot.hasData) {
                   return Center(
                     child: CircularProgressIndicator(),
                   );
                 }
+
+                final int completedTaskCount = snapshot.data
+                    .where((Task task) => task.status == 1)
+                    .toList()
+                    .length;
                 return ListView.builder(
                     padding: EdgeInsets.symmetric(vertical: 80.0),
                     itemCount: 1 + snapshot.data.length,
@@ -92,16 +127,16 @@ class _TodoListScreenState extends State<TodoListScreen> {
                                     height: 10.0,
                                   ),
                                   Text(
-                                    '1 of 10',
+                                    'Completed $completedTaskCount of ${snapshot.data.length}',
                                     style: TextStyle(
                                       color: Colors.grey,
-                                      fontSize: 20.0,
+                                      fontSize: 16.0,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   )
                                 ]));
                       }
-                      return _buildTask(snapshot.data(index - 1));
+                      return _buildTask(snapshot.data[index - 1]);
                     });
               })),
     );

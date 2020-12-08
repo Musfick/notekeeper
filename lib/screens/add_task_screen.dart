@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:notekeeper/helpers/datebase_helper.dart';
+import 'package:notekeeper/models/task_model.dart';
 
 class AddTaskScreen extends StatefulWidget {
+  final Task task;
+  final Function updateTaskList;
+
+  AddTaskScreen({this.updateTaskList, this.task});
+
   @override
   _AddTaskScreenState createState() => _AddTaskScreenState();
 }
@@ -19,6 +26,11 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   @override
   void initState() {
     super.initState();
+    if (widget.task != null) {
+      _title = widget.task.title;
+      _date = widget.task.date;
+      _priority = widget.task.priority;
+    }
     _dateController.text = _dateFormatter.format(_date);
   }
 
@@ -36,18 +48,31 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
       });
       _dateController.text = _dateFormatter.format(date);
     }
+  }
 
+  _delete () {
+    DatabaseHelper.instance.deleteTask(widget.task.id);
+    widget.updateTaskList();
+    Navigator.pop(context);
   }
 
   _submit() {
-    if(_formKey.currentState.validate()){
+    if (_formKey.currentState.validate()) {
       _formKey.currentState.save();
 
       //Save Task to the database
-
-      //Or Update task to the database
-
-      print('$_title, $_date, $_priority');
+      Task task = Task(_title, _date, _priority, 0);
+      if (widget.task != null) {
+        //Update task
+        task.id = widget.task.id;
+        task.status = widget.task.status;
+        DatabaseHelper.instance.updateTask(task);
+      } else {
+        //insert a new task
+        DatabaseHelper.instance.insertTask(task);
+      }
+      widget.updateTaskList();
+      Navigator.pop(context);
     }
   }
 
@@ -75,7 +100,7 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                     height: 20.0,
                   ),
                   Text(
-                    'Add Task',
+                      widget.task == null ? 'Add Task' : 'Update Task',
                     style: TextStyle(
                       color: Colors.black,
                       fontSize: 40.0,
@@ -130,13 +155,14 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                             iconEnabledColor: Theme.of(context).primaryColor,
                             items: _priorities
                                 .map((e) => DropdownMenuItem(
-                              value: e,
-                              child: Text(
-                                e,
-                                style: TextStyle(
-                                    color: Colors.black, fontSize: 18.0),
-                              ),
-                            ))
+                                      value: e,
+                                      child: Text(
+                                        e,
+                                        style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 18.0),
+                                      ),
+                                    ))
                                 .toList(),
                             style: TextStyle(fontSize: 18.0),
                             decoration: InputDecoration(
@@ -162,18 +188,33 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                           height: 60.0,
                           width: double.infinity,
                           decoration: BoxDecoration(
-                            color: Theme.of(context).primaryColor,
-                            borderRadius: BorderRadius.circular(30.0)
-                          ),
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(30.0)),
                           child: FlatButton(
-                            child: Text('Add', style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 20.0
-                            ),
+                            child: Text(
+                              widget.task == null ? 'Add' : 'Update',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 20.0),
                             ),
                             onPressed: _submit,
                           ),
-                        )
+                        ),
+                        widget.task != null ? Container(
+                          margin: EdgeInsets.symmetric(vertical: 20.0),
+                          height: 60.0,
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                              color: Theme.of(context).primaryColor,
+                              borderRadius: BorderRadius.circular(30.0)),
+                          child: FlatButton(
+                            child: Text(
+                              'Delete',
+                              style: TextStyle(
+                                  color: Colors.white, fontSize: 20.0),
+                            ),
+                            onPressed: _delete,
+                          ),
+                        ) : SizedBox.shrink(),
                       ],
                     ),
                   )
